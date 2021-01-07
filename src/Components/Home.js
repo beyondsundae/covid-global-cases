@@ -24,7 +24,7 @@ const Home = () => {
 
     const getCases = async () => {
         try{
-            await axios.get("http://localhost:4000/data")
+            await axios.get("https://shielded-crag-84591.herokuapp.com/data")
             .then((res) => {
 
                 const result = res.data
@@ -144,8 +144,3 @@ const Home = () => {
 }
 
 export default Home
-
-
-// const randomColor = () => {
-//   return `rgb(${255 * Math.random()}, ${255 * Math.random()}, ${255})`;
-// };
