@@ -28,26 +28,29 @@ const Home = () => {
             .then((res) => {
 
                 const result = res.data
-                const uniq = uniqBy(result, 'country') // remove ประเทศซ้ำ
-                const final = uniq.map(( item ) => {
+                const filteredUnique = uniqBy(result, 'country') // remove ประเทศที่ซ้ำออก
+
+                const CountriesandTimeline = filteredUnique.map(( item ) => {
                     return{
                         country: item.country,
                         timeline: item.timeline.cases
                     }
-                }) // refactor Array ใหม่
+                }) // จัดรุปเป็น Array ใหม่โดยดึงมาแค่ country กับ timeline
 
                 let tempDate = {}
-                uniq.find(( item ) => {
+                filteredUnique.find(( item ) => {
                     if (item.country === "USA") {
                         tempDate = item.timeline.cases
                     } 
                 })
-                const finalDate = Object.keys(tempDate) // สร้าง Array ของ 30 วัน
+                
+                const onlyDate = Object.keys(tempDate) // สร้าง Array ของวัน
 
+                const slicedDate = onlyDate.slice(5, 36) //ลำหรับเลือกวันลึกๆ  15 Aug - 14 Sep
 
                 let tempAmount = []
                 let tempColor = []
-                final.filter(( item ) => {
+                CountriesandTimeline.filter(( item ) => {
                    let color = "#" + Math.floor(Math.random()*16777215).toString(16)
                     
                    tempAmount = [
@@ -55,7 +58,7 @@ const Home = () => {
                     {
                         id: item.country,
                         title: item.country,
-                        value: `${item.timeline[finalDate[0]]}`,
+                        value: `${item.timeline[slicedDate[count]]}`,
                         color: color
                     }
                    ]
@@ -67,20 +70,18 @@ const Home = () => {
                     // console.log(tempAmount)
                 })
 
-                setData(tempAmount)
-                setColor(tempColor)
+                setData(tempAmount) //ตัวที่จะเอาไปแสดงใน Chart
+                setColor(tempColor) // เก็บสีไว้ทีเดียวเลย จะได้ไม่ต้องมีการ random สีใหม่ทุกครั้งทืี่ค่าเปลี่ยน
 
-                setCases(final)
-                setArrDate(finalDate)
+                setCases(CountriesandTimeline) // เก็บ cases เอาไว้ใช้ในการอัพเดทค่า 
+                setArrDate(slicedDate) //เก็บวันตามที่ get มา
 
                 setInterval(() => {
                     setCount(( prev )=> prev + 1 )
-                    
-                }, 200);
+                }, 250) // หลังจาก ได้ข้อมูลที่อย่างแล้วจะเริ่มการแสดงผล
 
                 // console.log(finalDate.length)
-                // console.log(tempColor)
-
+                // console.log(slicedDate)
             })
         }
         catch(error){
@@ -96,23 +97,15 @@ const Home = () => {
                 {
                     id: item.country,
                     title: item.country,
-                    value: `${item.timeline[ arrDate[count] !== undefined ? arrDate[count] : arrDate[arrDate.length - 1] ]}` , 
+                    value: `${item.timeline[ arrDate[count] !== undefined ? arrDate[count] : arrDate[arrDate.length - 1] ]}`, //ใช้ค่า index เข้าถึงเพื่อเอาค่าวันที่ออกมา
                     color: color[index]
                 }
                 ]
                 // console.log(tempAmount)
             })
 
-
         setData(tempAmount)
-
-        // console.log(data)
-       
-    }, [cases, arrDate, count])
-
-    useEffect(() => {
-        // console.log( count )
-    }, [ count ])
+    }, [cases, count])
 
     useEffect(()=>{
         getCases()
@@ -124,6 +117,7 @@ const Home = () => {
                     <h1>Covid Global Cases by SGN</h1>
                     {`Date :${arrDate[count] !== undefined ? arrDate[count] : arrDate[arrDate.length - 1]} `}
             </div>
+
             <div className=" container-fluid" style={Style.Content}>
                     <ChartRace 
                     data={data}
@@ -135,8 +129,6 @@ const Home = () => {
                         left: "20px",
                         marginTop: "-5px",
                         fontSize: "10px",
-                        
-                        
                       }}
                       valueStyle={{
                         position: "absolute",

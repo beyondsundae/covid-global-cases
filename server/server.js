@@ -1,9 +1,8 @@
 const express = require("express")
-const bodyParser = require('body-parser')
 const axios = require('axios')
 const cors = require('cors')
 
-const app = express()
+const app = express() //เพื่อ สร้าง server
 
 app.use(cors ({
     origin:'*', 
@@ -13,14 +12,14 @@ app.use(cors ({
 
 const Port = process.env.PORT || 4000
 
-app.get('/', () => {
+app.get('/', (req, res) => {
     res.send("Hi")
 })
 
 app.get('/data', async (req, res) => {
     try{
-        const result = await axios.get('https://disease.sh/v3/covid-19/historical?lastdays=45') //ใช้ตัว historical ของ JHUCSSE จะได้ data ทัี้งหมดมาตาม parameter lastdays ที่ใส่ไป
-        res.send( result.data) // get มาต้อง send คืนในรูป result.data
+        const result = await axios.get('https://disease.sh/v3/covid-19/historical?lastdays=150') //ใช้ตัว historical ของ JHUCSSE จะได้ data ทัี้งหมดมาตาม parameter lastdays ที่ใส่ไป
+        res.send( result.data ) // get มาต้อง send คืนในรูป result.data
         
      }
      catch (error){
