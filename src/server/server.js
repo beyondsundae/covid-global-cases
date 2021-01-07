@@ -19,7 +19,7 @@ app.get('/', () => {
 
 app.get('/data', async (req, res) => {
     try{
-        const result = await axios.get('https://disease.sh/v3/covid-19/historical?lastdays=15') //ใช้ตัว historical ของ JHUCSSE จะได้ data ทัี้งหมดมาตาม parameter lastdays ที่ใส่ไป
+        const result = await axios.get('https://disease.sh/v3/covid-19/historical?lastdays=45') //ใช้ตัว historical ของ JHUCSSE จะได้ data ทัี้งหมดมาตาม parameter lastdays ที่ใส่ไป
         res.send( result.data) // get มาต้อง send คืนในรูป result.data
         
      }
