@@ -5,6 +5,8 @@ import ChartRace from 'react-chart-race';
 const Home = () => {
     var uniqBy = require('lodash.uniqby');
 
+    const [ status, setStatus ] = useState(false)
+
     const [ cases, setCases ] = useState([])
     const [ data, setData ] = useState([])
     const [ arrDate, setArrDate ] = useState([])
@@ -26,6 +28,7 @@ const Home = () => {
         try{
             await axios.get("https://shielded-crag-84591.herokuapp.com/data")
             .then((res) => {
+                setStatus(true)
 
                 const result = res.data
                 const filteredUnique = uniqBy(result, 'country') // remove ประเทศที่ซ้ำออก
@@ -33,7 +36,7 @@ const Home = () => {
                 const CountriesandTimeline = filteredUnique.map(( item ) => {
                     return{
                         country: item.country,
-                        timeline: item.timeline.cases
+                        timeline: item.timeline.cases 
                     }
                 }) // จัดรุปเป็น Array ใหม่โดยดึงมาแค่ country กับ timeline
 
@@ -81,7 +84,7 @@ const Home = () => {
                 }, 250) // หลังจาก ได้ข้อมูลที่อย่างแล้วจะเริ่มการแสดงผล
 
                 // console.log(finalDate.length)
-                // console.log(slicedDate)
+                // console.log(tempAmount)
             })
         }
         catch(error){
@@ -111,6 +114,10 @@ const Home = () => {
         getCases()
     }, [])
 
+    useEffect(() => {
+        console.log(status)
+    }, [status])
+
     return (
         <div>
              <div className=" container-fluid text-center pt-2" style={Style.Header}>
@@ -119,26 +126,34 @@ const Home = () => {
             </div>
 
             <div className=" container-fluid" style={Style.Content}>
-                    <ChartRace 
-                    data={data}
-                    width={1400}
-                    itemHeight={38}
-                    backgroundColor="white"
-                    titleStyle={{
-                        position: "absolute",
-                        left: "20px",
-                        marginTop: "-5px",
-                        fontSize: "10px",
-                      }}
-                      valueStyle={{
-                        position: "absolute",
-                        left: "70px",
-                        marginTop: "-5px",
-                        fontSize: "10px"
-                      }}
-                     />
+                { !status ? (
+                    <img 
+                    src="https://firebasestorage.googleapis.com/v0/b/majoramassage.appspot.com/o/loading%2Fc1d187_40667438ff67484bb057a4c2168756b5_mv2.gif?alt=media&token=33bba46e-adb7-4a27-8568-3fc8668f038f" 
+                    style={{width: "50%", margin: "auto"}}
+                    className="row"
+                    />
+                ) : (
+                        <ChartRace 
+                            data={data}
+                            width={1400}
+                            itemHeight={38}
+                            backgroundColor="white"
+                            titleStyle={{
+                                position: "absolute",
+                                left: "20px",
+                                marginTop: "-5px",
+                                fontSize: "10px",
+                            }}
+                            valueStyle={{
+                                position: "absolute",
+                                left: "70px",
+                                marginTop: "-5px",
+                                fontSize: "10px",
+                            }}
+                        />
+                    
+                )}
             </div>
-  
         </div>
     )
 }
