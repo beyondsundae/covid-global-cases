@@ -3,95 +3,131 @@ import axios from 'axios';
 import ChartRace from 'react-chart-race';
 
 const Home = () => {
-    var uniqBy = require('lodash.uniqby');
+    var uniqBy = require("lodash.uniqby");
+    var _ = require("lodash");
 
-    const [ status, setStatus ] = useState(false)
+    const [status, setStatus] = useState(false);
 
-    const [ cases, setCases ] = useState([])
-    const [ data, setData ] = useState([])
-    const [ arrDate, setArrDate ] = useState([])
+    const [cases, setCases] = useState([]);
+    const [data, setData] = useState([]);
+    const [arrDate, setArrDate] = useState([]);
 
-    const [ color, setColor ] = useState([])
+    const [color, setColor] = useState([]);
 
-    const [ count, setCount ] = useState(0)
+    const [count, setCount] = useState(0);
 
     const Style = {
-        Header:{
-            height: "11vh"
+        Header: {
+        height: "11vh"
         },
-        Content:{ 
-            height: "88vh"
+        Content: {
+        height: "88vh"
         }
-    }
+    };
 
+//////////////// Initial Function /////    
     const getCases = async () => {
-        try{
-            await axios.get("https://shielded-crag-84591.herokuapp.com/data")
-            .then((res) => {
-                setStatus(true)
+        try {
+        await axios
+            .get("https://shielded-crag-84591.herokuapp.com/data")
+            .then(({data}) => {
+            setStatus(true);
 
-                const result = res.data
-                const filteredUnique = uniqBy(result, 'country') // remove ประเทศที่ซ้ำออก
-
-                const CountriesandTimeline = filteredUnique.map(( item ) => {
-                    return{
-                        country: item.country,
-                        timeline: item.timeline.cases 
-                    }
-                }) // จัดรุปเป็น Array ใหม่โดยดึงมาแค่ country กับ timeline
-
-                let tempDate = {}
-                filteredUnique.find(( item ) => {
+//////////////// Date zone /////
+            let tempDate = {};
+                data.find((item) => {
                     if (item.country === "USA") {
-                        tempDate = item.timeline.cases
-                    } 
-                })
-                
-                const onlyDate = Object.keys(tempDate) // สร้าง Array ของวัน
+                    tempDate = item.timeline.cases;
+                }
+            });
 
-                const slicedDate = onlyDate.slice(5, 36) //ลำหรับเลือกวันลึกๆ  15 Aug - 14 Sep
+            const onlyDate = Object.keys(tempDate); // สร้าง Array ของวัน ดึง key ออกมาเป็น String
+            const slicedDate = onlyDate.slice(5, 36); //ลำหรับเลือกวันลึกๆ
 
-                let tempAmount = []
-                let tempColor = []
-                CountriesandTimeline.filter(( item ) => {
-                   let color = "#" + Math.floor(Math.random()*16777215).toString(16)
-                    
-                   tempAmount = [
-                       ...tempAmount,   
-                    {
-                        id: item.country,
-                        title: item.country,
-                        value: `${item.timeline[slicedDate[count]]}`,
-                        color: color
-                    }
-                   ]
+//////////////// Duplicate Country /////
+            const AllCountryName = data.map((item, index) => {
+                return item.country;
+            }); // map เอามาเเต่ชื่อประเทศ เพื่อจะเอาไปหาประเทศทีซ้ำกัน
 
-                   tempColor = [
-                       ...tempColor,
-                       color
-                   ]
-                    // console.log(tempAmount)
-                })
+            const duplicateCountry = _.filter(AllCountryName, (item, index, array) => array.indexOf(item) !== index ); //หา ชื่อ ประเทศที่มีค่าซ้ำ
+            const UniqeDuplicateCountry = _.uniq(duplicateCountry); // หา uniqe ประเทศที่ซ้ำ
 
-                setData(tempAmount) //ตัวที่จะเอาไปแสดงใน Chart
-                setColor(tempColor) // เก็บสีไว้ทีเดียวเลย จะได้ไม่ต้องมีการ random สีใหม่ทุกครั้งทืี่ค่าเปลี่ยน
+            let DuplicateArr = []
+            UniqeDuplicateCountry.forEach(( DupCountryName ) => {
+                let duplicated = data
+                    .filter((item) => {
+                        return item.country === DupCountryName;
+                    }) // filter แค่ ประเทศที่ชื่อซ้ำ
+                    .map((item) => {
+                        return {
+                        country: item.country,
+                        timeline: item.timeline.cases
+                        };
+                    }); // map กรองเอา properties ที่จะใช้
+            
+                let TempObj = {};
+                slicedDate.forEach((item, index) => { // 30 วัน
+                    TempObj[item] = _.sumBy(duplicated, `timeline[${onlyDate[index]}]`)})  // เป็นท่าที่เอาค่ารวมกันไว้ใน object เดียว 
 
-                setCases(CountriesandTimeline) // เก็บ cases เอาไว้ใช้ในการอัพเดทค่า 
-                setArrDate(slicedDate) //เก็บวันตามที่ get มา
+                    DuplicateArr = [
+                        ...DuplicateArr,
+                        {
+                        country: DupCountryName,
+                        timeline: TempObj
+                        }
+                    ]
+            });
 
-                setInterval(() => {
-                    setCount(( prev )=> prev + 1 )
-                }, 250) // หลังจาก ได้ข้อมูลที่อย่างแล้วจะเริ่มการแสดงผล
+//////////////// non-Duplicate Country /////
+            const filteredUnique = uniqBy(data, "country"); // remove ประเทศที่ซ้ำออก
 
-                // console.log(finalDate.length)
-                // console.log(tempAmount)
-            })
+            const nonDuplicateArr = filteredUnique.map((item) => {
+                return {
+                country: item.country,
+                timeline: item.timeline.cases
+                };
+            }); // จัดรุปเป็น Array ใหม่โดยดึงมาแค่ country กับ timeline
+
+            const CombinedCountries = [ ...nonDuplicateArr, ...DuplicateArr]
+
+//////////////// Final Transformation Data /////            
+            let tempNewData = [];
+            let tempColor = [];
+            CombinedCountries.filter((item) => {
+                let color = "#" + Math.floor(Math.random() * 16777215).toString(16);
+
+                tempNewData = [
+                ...tempNewData,
+                {
+                    id: item.country,
+                    title: item.country,
+                    value: `${item.timeline[slicedDate[count]]}`,
+                    color: color
+                }
+                ];
+
+                tempColor = [...tempColor, color];
+            });
+
+//////////////// /////
+            setData(tempNewData); //ตัวที่จะเอาไปแสดงใน Chart
+            setColor(tempColor); // เก็บสีไว้ทีเดียวเลย จะได้ไม่ต้องมีการ random สีใหม่ทุกครั้งทืี่ค่าเปลี่ยน
+
+            setCases(CombinedCountries); // เก็บ cases เอาไว้ใช้ในการอัพเดทค่า
+            setArrDate(slicedDate); //เก็บวันตามที่ get มา
+
+            setInterval(() => {
+                setCount((prev) => prev + 1);
+            }, 250); // หลังจาก ได้ข้อมูลที่อย่างแล้วจะเริ่มการแสดงผล
+
+            // console.log(data);
+            });
+        } catch (error) {
+            console.log(error);
         }
-        catch(error){
-            console.log(error)
-        }
-    }
+    };
 
+ //////////////// Side-effect Function /////       
     useEffect(() => {
         let tempAmount = []
             cases.filter(( item, index ) => {
@@ -113,10 +149,6 @@ const Home = () => {
     useEffect(()=>{
         getCases()
     }, [])
-
-    useEffect(() => {
-        console.log(status)
-    }, [status])
 
     return (
         <div>
@@ -146,7 +178,7 @@ const Home = () => {
                             }}
                             valueStyle={{
                                 position: "absolute",
-                                left: "70px",
+                                left: "85px",
                                 marginTop: "-5px",
                                 fontSize: "10px",
                             }}
@@ -159,3 +191,35 @@ const Home = () => {
 }
 
 export default Home
+
+
+
+            ////////// 
+
+            // let china33provinces = data
+            //     .filter((item) => {
+            //         return item.country === "China"; // ทดสอบ โดบการเลือกประเทศจีนที่มี 33 จังหวัด 
+
+            //     })
+            //     .map((item) => {
+            //         return {
+            //         country: item.country,
+            //         timeline: item.timeline.cases
+            //         };
+
+            //     }); // กรองเอา properties ที่จะใช้
+
+            // let TempObj = {};
+
+            // slicedDate.forEach((item, index) => {
+            //     TempObj[item] = _.sumBy(china33provinces, `timeline[${onlyDate[index]}]`);
+
+            // }); // เป็นท่าที่ Reduce ค่ารวมกันไว้ใน object ตัวเดียว 
+
+            // const Country = {
+            //     country: "China",
+            //     timeline: TempObj
+
+            // };
+
+            //////////
